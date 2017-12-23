@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Straightening a Great Circle</title>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    </head>
+    <body style="text-align: center;">
+        <div id="plot"></div>
+        <script type="text/javascript">
+        function midPointWithBearing(start, end, longWayAround) {
+            //from https://www.movable-type.co.uk/scripts/latlong.html
+            var lat1 = start[0] * (Math.PI / 180);
+            var lon1 = start[1] * (Math.PI / 180);
+            var lat2 = end[0] * (Math.PI / 180);
+            var lon2 = end[1] * (Math.PI / 180);
+            var Bx = Math.cos(lat2) * Math.cos(lon2-lon1);
+            var By = Math.cos(lat2) * Math.sin(lon2-lon1);
+            var lat3 = Math.atan2(Math.sin(lat1) + Math.sin(lat2),
+                        Math.sqrt( (Math.cos(lat1)+Bx)*(Math.cos(lat1)+Bx) + By*By ) );
+            var lon3 = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
+
+            if(longWayAround) {
+                lat3 = ( -1*(lat3/(Math.PI / 180)))  * (Math.PI / 180);
+                lon3 = (180+(lon3/(Math.PI / 180)))  * (Math.PI / 180);
+            }
+
+            var y = Math.sin(lon2-lon3) * Math.cos(lat2);
+            var x = Math.cos(lat3)*Math.sin(lat2) -
+                    Math.sin(lat3)*Math.cos(lat2)*Math.cos(lon2-lon3);
+            var bearing = Math.atan2(y, x);
+
+            return [lat3/(Math.PI / 180), lon3/(Math.PI / 180), bearing/(Math.PI / 180)];
+        }
+
+        var montreal = [45.5017, -73.5673];
+        var moscow = [55.7558, 37.6173];
+        var sydney = [-33.865143, 151.209900];
+        var johannesburg = [-26.2041, 28.0473];
+        var paris = [48.8566, 2.3522];
+        var tokyo = [35.6895, 139.6917]
+        var sao_paulo = [-23.5505, -46.6333];
+
+        var a=[25.416667, 66.416667], b = [59.633333, 163.4]; //longest line on water
+
+        var start = tokyo;
+        var end = sao_paulo;
+        var mid = midPointWithBearing(start, end);
+
+        Plotly.plot('plot',
+            [{
+                type:'scattergeo',
+                lat: [start[0],mid[0],end[0]],
+                lon: [start[1],mid[1],end[1]],
+                text: ['Tokyo', 'Midpoint', 'Sao Paulo'],
+                mode: 'markers+lines',
+                line: { width: 2, color: '#B00' }
+            }],
+            {
+              title: "Straightened Great Circle Track from Tokyo to Sao Paulo",
+              margin: {r:0,b:0,t:50,l:0}, height: 450, width: 800,
+                geo: {
+                    projection: {
+                        rotation: {lat: mid[0], lon: mid[1], roll: 270+mid[2]}
+                    },
+                    center: {lat: mid[0], lon: mid[1]},
+                    lataxis: {range: [-180,180]}, lonaxis: {range: [-180,180]},
+                    showocean: true, oceancolor: 'white',
+                    coastlinecolor: '#555', coastlinewidth: 0.5,
+                    showcountries: true, countrycolor: '#555', countrywidth: 0.5,
+                    showland: true, landcolor: '#ccc',
+                    showlakes: true, lakecolor: 'white',
+                    resolution: 80,
+                }
+            }
+        );
+        </script>
+    </body>
+</html>
